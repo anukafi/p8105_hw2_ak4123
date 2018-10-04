@@ -30,7 +30,6 @@ There are `r {count(select(transit_data, line, station_name, ada) %>% filter(ada
 The proportion of station entrances/exits without vending that allow entrance is `r {count(select(transit_data, entry, vending) %>% filter(vending == "NO") %>% summarize(mean(entry)))}`. Thus, all station/entrances/exits without vending allow entrance. 
 
 Reformat data so that route number and route name are distinct variables. 
-
 ```{R reformat}
 transit_data_reformat = 
   transit_data %>%
@@ -38,16 +37,14 @@ transit_data_reformat =
 
 select(transit_data_reformat, route_name, station_name, line) %>% 
   filter(route_name == "A") %>% 
-  distinct(line, station_name)
+  n_distinct()
 
-select(transit_data_reformat, route_name, station_name, line, ada) %>% 
-  filter(route_name == "A", ada == "TRUE") %>% 
-  distinct(line, station_name)
+
 ```
 
-There are `r {count(select(transit_data_reformat, route_name, station_name, line) %>% filter(route_name == "A") %>% distinct(line, station_name))}` distinct stations that serve the A train.
+There are `r {select(transit_data_reformat, route_name, station_name, line) %>% filter(route_name == "A") %>% n_distinct()}` distinct stations that serve the A train.
 
-Of the stations that serve the A train, `r {count(select(transit_data_reformat, route_name, station_name, line, ada) %>% filter(route_name == "A", ada == "TRUE") %>% distinct(line, station_name))}` are ADA compliant.
+Of the stations that serve the A train, `r {select(transit_data_reformat, route_name, station_name, line, ada) %>% filter(route_name == "A", ada == "TRUE") %>% n_distinct()}` are ADA compliant.
 
 Read and clean the Mr. Trash Wheel sheet:
 ```{R Q2 Mr. Trash data cleaning}
@@ -75,6 +72,7 @@ mutate(year = 2017)
 
 data_joined = bind_rows(sixteen_data, seventeen_data) %>%
 mutate(month = month.name[as.integer(month)])
+
 ```
 
 Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in both resulting datasets, and give examples of key variables. 
@@ -90,19 +88,20 @@ library(p8105.datasets)
 data("brfss_smart2010")
 
 BRFSS_data = brfss_smart2010 %>% 
- janitor::clean_names() %>%
-filter(topic == "overall_health") %>% 
-select(year:locationdesc, response, data_value)
-
-spread(BRFSS_data, key = response, value = data_value)
-mutate(excellent_verygood = sum(sum(excellent), sum(verygood)))
-mean(sum(excellent)) %>%
-count(select(BRFSS_data, excellent_verygood) %>% summarize(mean(excellent_verygood)))
+janitor::clean_names() %>%
+filter(topic == "Overall Health") %>% 
+select(year:locationdesc, response, data_value)  %>% 
+spread(key = response, value = data_value) %>% 
+janitor::clean_names() %>%
+mutate(excellent_verygood = excellent + very_good / 100)
 ```
 
 Using this dataset, do or answer the following:
-How many unique locations are included in the dataset?
+How many unique locations are included in the dataset? There are `r{ count(n_distinct(BRFSS_data$locationdesc))}` unique locations included in this dataset. 
 Is every state represented? What state is observed the most?
+
+There are `r{ count(n_distinct(BRFSS_data$locationabbr))}` states included in this dataset. 
+
 In 2002, what is the median of the “Excellent” response value?
 Make a histogram of “Excellent” response values in the year 2002.
 Make a scatterplot showing the proportion of “Excellent” response values in New York County and Queens County (both in NY State) in each year from 2002 to 2010.
