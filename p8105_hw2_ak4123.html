@@ -151,6 +151,10 @@ $(document).ready(function () {
 <h3>About the data:</h3>
 <p>This dataset contains the information about NYC subway lines. It includes the line name, the staation name and location via longitude and latitude, along with what routes it serves. Also, whether the station has entry or not is included, along with the entrance type. The last piece of information included is whether it is ADA compliant. So far, I have cleaned the names of the data to be all lowercase, and in snake casing. I have included only the variables asked for, thus getting rid of the division name, exit only variable (which is dependent on the entry vairable), the information on staffing, the cross streets, and the longititudes and latitudes of the entrances and exits. (1868, 19) is the dimensions of this dataset. This means there are 1868 observations (rows) and 19 variables (columns). These data are not tidy. One example of this would be the mutiple, unnecessary columns for the routes (there are 11). This is redundant and excessive, and need to be condensed.</p>
 </div>
+<div id="questions" class="section level3">
+<h3>Questions:</h3>
+<p>There are 465 distinct stations. There are 84 ADA compliant stations. The proportion of station entrances/exits without vending that allow entrance is `r {count(select(transit_data, entry, vending) %&gt;% filter(vending == “NO”) %&gt;% summarize(mean(entry)))}. Thus, all station/entrances/exits without vending allow entrance.</p>
+</div>
 </div>
 
 
