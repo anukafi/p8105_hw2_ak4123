@@ -2,4 +2,11 @@
 title: "p8105_hw2_ak4123"
 output: github_document
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load package}
 library(tidyverse)
+```
