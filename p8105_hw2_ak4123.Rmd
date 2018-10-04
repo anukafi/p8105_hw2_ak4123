@@ -11,8 +11,8 @@ library(tidyverse)
 ##QUESTION 1
 
 Read & Clean Data
-```{R data cleaning}
-transit_data = read_csv(file = "./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")%>%
+```{R question 1 data cleaning}
+transit_data = read_csv(file = "./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>%
   janitor::clean_names() %>%
   select(line, station_name, station_latitude, station_longitude, route1:route11, entry, vending, entrance_type, ada) %>%
   mutate(entry = recode(entry, "YES" = TRUE, "NO" = FALSE))
@@ -48,3 +48,40 @@ select(transit_data_reformat, route_name, station_name, line, ada) %>%
 There are `r {count(select(transit_data_reformat, route_name, station_name, line) %>% filter(route_name == "A") %>% distinct(line, station_name))}` distinct stations that serve the A train.
 
 Of the stations that serve the A train, `r {count(select(transit_data_reformat, route_name, station_name, line, ada) %>% filter(route_name == "A", ada == "TRUE") %>% distinct(line, station_name))}` are ADA compliant.
+
+
+
+Read and clean the Mr. Trash Wheel sheet:
+
+
+```{R Q2 Mr. Trash data cleaning}
+library(readxl)
+mr_trash_data = 
+  read_excel("data/HealthyHarborWaterWheelTotals2017-9-26.xlsx", sheet = "Mr. Trash Wheel", range = cell_cols("A:M")) %>%
+janitor::clean_names() %>%
+filter(is.na(dumpster)) %>%
+mutate(sports_balls = as.integer(round(sports_balls, 0)))
+```
+
+
+Read and clean precipitation data for 2016 and 2017. For each, omit rows without precipitation data and add a variable year. Next, combine datasets and convert month to a character variable (the variable month.name is built into R and should be useful).
+
+```{R precipitation data cleaning}
+sixteen_data = read_excel("data/HealthyHarborWaterWheelTotals2017-9-26.xlsx", sheet = "2016 Precipitation", range = cell_rows(2:15)) %>%
+janitor::clean_names() %>%
+  mutate(year = 2016) %>%
+filter(is.na(total))
+  
+seventeen_data = read_excel("data/HealthyHarborWaterWheelTotals2017-9-26.xlsx", sheet = "2017 Precipitation", range = cell_rows(2:15)) %>%
+  janitor::clean_names() %>%
+filter(is.na(total))  %>%
+mutate(year = 2017)
+
+##data_joined = 
+##right_join(sixteen_data, seventeen_data, by = "year") %>%
+##mutate(month = month.name) %>%
+##as.character(month)
+```
+
+Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in both resulting datasets, and give examples of key variables. For available data, what was the total precipitation in 2017? What was the median number of sports balls in a dumpster in 2016?
+
