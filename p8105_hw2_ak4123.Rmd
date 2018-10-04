@@ -1,12 +1,26 @@
 ---
 title: "p8105_hw2_ak4123"
-output: github_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r load package}
 library(tidyverse)
 ```
+
+##QUESTION 1
+
+Read & Clean Data
+```{R data cleaning}
+transit_data = read_csv(file = "./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")%>%
+  janitor::clean_names() %>%
+  select(line, station_name, station_latitude, station_longitude, route1:route11, entry, vending, entrance_type, ada) %>%
+  mutate(entry = recode(entry, "YES" = TRUE, "NO" = FALSE))
+```
+
+
+###About the data:
+This dataset contains the information about NYC subway lines. It includes the line name, the staation name and location via longitude and latitude, along with what routes it serves. Also, whether the station has entry or not is included, along with the entrance type. The last piece of information included is whether it is ADA compliant. So far, I have cleaned the names of the data to be all lowercase, and in snake casing. I have included only the variables asked for, thus getting rid of the division name, exit only variable (which is dependent on the entry vairable), the information on staffing, the cross streets, and the longititudes and latitudes of the entrances and exits. (`r {dim(transit_data)}`) is the dimensions of this dataset. This means there are 1868 observations (rows) and 19 variables (columns). These data are not tidy. One example of this would be the mutiple, unnecessary columns for the routes (there are 11). This is redundant and excessive, and need to be condensed. 
+
+
+
