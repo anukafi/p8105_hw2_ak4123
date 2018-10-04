@@ -34,7 +34,7 @@ Reformat data so that route number and route name are distinct variables.
 ```{R reformat}
 transit_data_reformat = 
   transit_data %>%
-  gather(key = route_number, value=route_name, route1:route11)
+  gather(key = route_number, value = route_name, route1:route11)
 
 select(transit_data_reformat, route_name, station_name, line) %>% 
   filter(route_name == "A") %>% 
@@ -49,39 +49,60 @@ There are `r {count(select(transit_data_reformat, route_name, station_name, line
 
 Of the stations that serve the A train, `r {count(select(transit_data_reformat, route_name, station_name, line, ada) %>% filter(route_name == "A", ada == "TRUE") %>% distinct(line, station_name))}` are ADA compliant.
 
-
-
 Read and clean the Mr. Trash Wheel sheet:
-
-
 ```{R Q2 Mr. Trash data cleaning}
 library(readxl)
 mr_trash_data = 
-  read_excel("data/HealthyHarborWaterWheelTotals2017-9-26.xlsx", sheet = "Mr. Trash Wheel", range = cell_cols("A:M")) %>%
+  read_excel("data/HealthyHarborWaterWheelTotals2018-7-28.xlsx", sheet = "Mr. Trash Wheel", range = cell_cols("A:M")) %>%
 janitor::clean_names() %>%
 filter(is.na(dumpster)) %>%
-mutate(sports_balls = as.integer(round(sports_balls, 0)))
+mutate(sports_balls = as.integer(round(sports_balls)))
 ```
 
 
 Read and clean precipitation data for 2016 and 2017. For each, omit rows without precipitation data and add a variable year. Next, combine datasets and convert month to a character variable (the variable month.name is built into R and should be useful).
 
 ```{R precipitation data cleaning}
-sixteen_data = read_excel("data/HealthyHarborWaterWheelTotals2017-9-26.xlsx", sheet = "2016 Precipitation", range = cell_rows(2:15)) %>%
+sixteen_data = read_excel("data/HealthyHarborWaterWheelTotals2018-7-28.xlsx", sheet = "2016 Precipitation", range = cell_rows(2:15)) %>%
 janitor::clean_names() %>%
   mutate(year = 2016) %>%
 filter(is.na(total))
   
-seventeen_data = read_excel("data/HealthyHarborWaterWheelTotals2017-9-26.xlsx", sheet = "2017 Precipitation", range = cell_rows(2:15)) %>%
+seventeen_data = read_excel("data/HealthyHarborWaterWheelTotals2018-7-28.xlsx", sheet = "2017 Precipitation", range = cell_rows(2:15)) %>%
   janitor::clean_names() %>%
 filter(is.na(total))  %>%
 mutate(year = 2017)
 
-##data_joined = 
-##right_join(sixteen_data, seventeen_data, by = "year") %>%
-##mutate(month = month.name) %>%
-##as.character(month)
+data_joined = bind_rows(sixteen_data, seventeen_data) %>%
+mutate(month = month.name[as.integer(month)])
 ```
 
-Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in both resulting datasets, and give examples of key variables. For available data, what was the total precipitation in 2017? What was the median number of sports balls in a dumpster in 2016?
+Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in both resulting datasets, and give examples of key variables. 
 
+The total precipitation in 2017 was `r {sum(seventeen_data$total)}` inches for the data available. 
+
+The median number of sports balls in a dumpster in 2016 was `r {median(sixteen_data$sports_balls)}` balls. 
+
+```{r question 3}
+# install.packages("devtools")
+devtools::install_github("p8105/p8105.datasets")
+library(p8105.datasets)
+data("brfss_smart2010")
+
+BRFSS_data = brfss_smart2010 %>% 
+ janitor::clean_names() %>%
+filter(topic == "overall_health") %>% 
+select(year:locationdesc, response, data_value)
+
+spread(BRFSS_data, key = response, value = data_value)
+mutate(excellent_verygood = sum(sum(excellent), sum(verygood)))
+mean(sum(excellent)) %>%
+count(select(BRFSS_data, excellent_verygood) %>% summarize(mean(excellent_verygood)))
+```
+
+Using this dataset, do or answer the following:
+How many unique locations are included in the dataset?
+Is every state represented? What state is observed the most?
+In 2002, what is the median of the “Excellent” response value?
+Make a histogram of “Excellent” response values in the year 2002.
+Make a scatterplot showing the proportion of “Excellent” response values in New York County and Queens County (both in NY State) in each year from 2002 to 2010.
