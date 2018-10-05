@@ -34,12 +34,6 @@ Reformat data so that route number and route name are distinct variables.
 transit_data_reformat = 
   transit_data %>%
   gather(key = route_number, value = route_name, route1:route11)
-
-select(transit_data_reformat, route_name, station_name, line) %>% 
-  filter(route_name == "A") %>% 
-  n_distinct()
-
-
 ```
 
 There are `r {select(transit_data_reformat, route_name, station_name, line) %>% filter(route_name == "A") %>% n_distinct()}` distinct stations that serve the A train.
@@ -60,26 +54,35 @@ mutate(sports_balls = as.integer(round(sports_balls)))
 Read and clean precipitation data for 2016 and 2017. For each, omit rows without precipitation data and add a variable year. Next, combine datasets and convert month to a character variable (the variable month.name is built into R and should be useful).
 
 ```{R precipitation data cleaning}
-sixteen_data = read_excel("data/HealthyHarborWaterWheelTotals2018-7-28.xlsx", sheet = "2016 Precipitation", range = cell_rows(2:15)) %>%
+sixteen_data = readxl::read_excel("data/HealthyHarborWaterWheelTotals2018-7-28.xlsx", sheet = "2016 Precipitation", range = cellranger::cell_cols("A:B")) %>%
 janitor::clean_names() %>%
-  mutate(year = 2016) %>%
-filter(is.na(total))
-  
-seventeen_data = read_excel("data/HealthyHarborWaterWheelTotals2018-7-28.xlsx", sheet = "2017 Precipitation", range = cell_rows(2:15)) %>%
-  janitor::clean_names() %>%
-filter(is.na(total))  %>%
-mutate(year = 2017)
+filter(!is.na(precipitation_in) & !is.na(x_1) & precipitation_in != ("Month")) %>% 
+rename(month = precipitation_in) %>% 
+rename(rainfall_in = x_1) %>% 
+mutate(rainfall_in = as.numeric(rainfall_in)) %>% 
+add_column(year = "2016") 
+   
+seventeen_data = readxl::read_excel("data/HealthyHarborWaterWheelTotals2018-7-28.xlsx", sheet = "2017 Precipitation", range = cellranger::cell_cols("A:B")) %>%
+janitor::clean_names() %>%
+filter(!is.na(precipitation_in) & !is.na(x_1) & precipitation_in != ("Month")) %>% 
+rename(month = precipitation_in) %>% 
+rename(rainfall_in = x_1) %>% 
+mutate(rainfall_in = as.numeric(rainfall_in)) %>% 
+add_column(year = "2017") 
 
-data_joined = bind_rows(sixteen_data, seventeen_data) %>%
-mutate(month = month.name[as.integer(month)])
+data_joined = bind_rows(sixteen_data, seventeen_data) %>% 
+mutate(month = month.name[as.integer(month)]) 
 
+sum(seventeen_data$rainfall_in)
 ```
 
 Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in both resulting datasets, and give examples of key variables. 
 
-The total precipitation in 2017 was `r {sum(seventeen_data$total)}` inches for the data available. 
+The total precipitation in 2017 was `r {sum(seventeen_data$rainfall_in)}`
+inches for the data available. 
 
-The median number of sports balls in a dumpster in 2016 was `r {median(sixteen_data$sports_balls)}` balls. 
+The median number of sports balls in a dumpster in 2016 
+was`r {median(mr_trash_data$sports_balls)}`  balls. 
 
 ```{r question 3}
 # install.packages("devtools")
@@ -97,10 +100,10 @@ mutate(excellent_verygood = excellent + very_good / 100)
 ```
 
 Using this dataset, do or answer the following:
-How many unique locations are included in the dataset? There are `r{ count(n_distinct(BRFSS_data$locationdesc))}` unique locations included in this dataset. 
+How many unique locations are included in the dataset? There are `r {count(n_distinct(BRFSS_data$locationdesc))}` unique locations included in this dataset. 
 Is every state represented? What state is observed the most?
 
-There are `r{ count(n_distinct(BRFSS_data$locationabbr))}` states included in this dataset. 
+There are `r {count(n_distinct(BRFSS_data$locationabbr))}` states included in this dataset. 
 
 In 2002, what is the median of the “Excellent” response value?
 Make a histogram of “Excellent” response values in the year 2002.
