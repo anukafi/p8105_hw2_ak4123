@@ -97,31 +97,17 @@ brfss_data = brfss_smart2010 %>%
   spread(key = response, value = data_value) %>% 
   janitor::clean_names()
 
-brfss_data %>% 
-  mutate(proportion_excellent_verygood = (excellent + very_good)) %>% 
-  filter(year == "2002", !is.na(excellent))
-
-brfss_data %>% 
-  distinct(locationabbr) %>% 
-  count()
-
-brfss_data %>% 
-  count(locationabbr) %>% 
-  arrange(desc(n)) %>% 
-  select(locationabbr) %>% 
-  head(1)
-
 ```
 
 ###Questions
-There are `r {count(distinct(brfss_data, locationdesc))}` unique locations included in this dataset. 
+There are `r {brfss_data %>% distinct(locationdesc) %>% count()}` unique locations included in this dataset. 
 
 There are `r {brfss_data %>% distinct(locationabbr) %>% count()}` states included in this dataset. Thus, every state is represented, including DC.
 
 `r {brfss_data %>% count(locationabbr) %>% arrange(desc(n)) %>% select(locationabbr) %>% head(1)}` is the state with the most observations. 
 
 In 2002, what is the median of the “Excellent” response value? 
-`r {brfss)data %>% filter(year == "2002", !is.na(excellent)) %>% summarize(median(excellent))}` was the median of the Excellent response value. 
+`r {brfss_data %>% filter(year == "2002", !is.na(excellent)) %>% summarize(median(excellent))}` was the median of the Excellent response value. 
 
 
 
