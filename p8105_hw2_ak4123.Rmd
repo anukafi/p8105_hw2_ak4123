@@ -9,8 +9,7 @@ library(tidyverse)
 ```
 
 ##QUESTION 1
-
-Read & Clean Data
+In this code chunk, I will read and clean the NYC Transit data; retain line, station, name, station latitude / longitude, routes served, entry, vending, entrance type, and ADA compliance and convert the entry variable from character (YES vs NO) to a logical variable.
 ```{R question 1 data cleaning}
 transit_data = read_csv(file = "./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>%
   janitor::clean_names() %>%
@@ -23,24 +22,25 @@ transit_data = read_csv(file = "./data/NYC_Transit_Subway_Entrance_And_Exit_Data
 This dataset contains the information about NYC subway lines. It includes the line name, the staation name and location via longitude and latitude, along with what routes it serves. Also, whether the station has entry or not is included, along with the entrance type. The last piece of information included is whether it is ADA compliant. So far, I have cleaned the names of the data to be all lowercase, and in snake casing. I have included only the variables asked for, thus getting rid of the division name, exit only variable (which is dependent on the entry vairable), the information on staffing, the cross streets, and the longititudes and latitudes of the entrances and exits. (`r {dim(transit_data)}`) is the dimensions of this dataset. This means there are 1868 observations (rows) and 19 variables (columns). These data are not tidy. One example of this would be the mutiple, unnecessary columns for the routes (there are 11). This is redundant and excessive, and need to be condensed. 
 
 
-
 ###Questions:
 There are `r {count(transit_data %>% distinct(line, station_name))}` distinct stations.
 There are `r {count(select(transit_data, line, station_name, ada) %>% filter(ada == TRUE) %>% distinct(line, station_name, ada))}` ADA compliant stations. 
 The proportion of station entrances/exits without vending that allow entrance is `r {count(select(transit_data, entry, vending) %>% filter(vending == "NO") %>% summarize(mean(entry)))}`. Thus, all station/entrances/exits without vending allow entrance. 
 
-Reformat data so that route number and route name are distinct variables. 
+In this datachunk, I reformat data so that route number and route name are distinct variables. 
 ```{R reformat}
 transit_data_reformat = 
   transit_data %>%
   gather(key = route_number, value = route_name, route1:route11)
 ```
 
+###Questions
 There are `r {select(transit_data_reformat, route_name, station_name, line) %>% filter(route_name == "A") %>% n_distinct()}` distinct stations that serve the A train.
 
 Of the stations that serve the A train, `r {select(transit_data_reformat, route_name, station_name, line, ada) %>% filter(route_name == "A", ada == "TRUE") %>% n_distinct()}` are ADA compliant.
 
-Read and clean the Mr. Trash Wheel sheet:
+##QUESTION 2
+In this datachunk, I read and cleaned the Mr. Trash Wheel sheet:
 ```{R Q2 Mr. Trash data cleaning}
 library(readxl)
 mr_trash_data = 
@@ -51,8 +51,7 @@ mutate(sports_balls = as.integer(round(sports_balls)))
 ```
 
 
-Read and clean precipitation data for 2016 and 2017. For each, omit rows without precipitation data and add a variable year. Next, combine datasets and convert month to a character variable (the variable month.name is built into R and should be useful).
-
+In this data chunk, I will read and clean precipitation data for 2016 and 2017. For each, rows without precipitation data and add a variable year were omitted. Next, I combined datasets and converted month to a character variable.
 ```{R precipitation data cleaning}
 sixteen_data = readxl::read_excel("data/HealthyHarborWaterWheelTotals2018-7-28.xlsx", sheet = "2016 Precipitation", range = cellranger::cell_cols("A:B")) %>%
 janitor::clean_names() %>%
@@ -75,36 +74,67 @@ mutate(month = month.name[as.integer(month)])
 
 sum(seventeen_data$rainfall_in)
 ```
+###About the data
+The 2016 and 2017 precipitation data was combined to make a joint dataset. There are `r {nrow(sixteen_data)}` observations in the 2016 dataset and `r {nrow(seventeen_data)}` observations in 2017 dataset. In the combined dataset, there are `r {nrow(data_joined)}`. The key variables in this dataset are month and rainfall_in, which is the total precipitation for the month. There was a combined, `r {data_joined %>% select(rainfall_in) %>% sum()}` inches of rainfall between the two years, with `r {seventeen_data %>% select(rainfall_in) %>% sum()}` inches in 2017 and `r {sixteen_data %>% select(rainfall_in) %>% sum()}` inches in 2016. 
 
-Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in both resulting datasets, and give examples of key variables. 
-
+###Questions
 The total precipitation in 2017 was `r {sum(seventeen_data$rainfall_in)}`
 inches for the data available. 
 
 The median number of sports balls in a dumpster in 2016 
 was`r {median(mr_trash_data$sports_balls)}`  balls. 
 
+##QUESTION 3
 ```{r question 3}
-# install.packages("devtools")
 devtools::install_github("p8105/p8105.datasets")
 library(p8105.datasets)
 data("brfss_smart2010")
 
-BRFSS_data = brfss_smart2010 %>% 
-janitor::clean_names() %>%
-filter(topic == "Overall Health") %>% 
-select(year:locationdesc, response, data_value)  %>% 
-spread(key = response, value = data_value) %>% 
-janitor::clean_names() %>%
-mutate(excellent_verygood = excellent + very_good / 100)
+brfss_data = brfss_smart2010 %>% 
+  janitor::clean_names() %>% 
+  filter(topic == "Overall Health") %>% 
+  select(-class, -topic, -question, -sample_size, -confidence_limit_low:-geo_location) %>% 
+  spread(key = response, value = data_value) %>% 
+  janitor::clean_names()
+
+brfss_data %>% 
+  mutate(proportion_excellent_verygood = (excellent + very_good)) %>% 
+  filter(year == "2002", !is.na(excellent))
+
+brfss_data %>% 
+  distinct(locationabbr) %>% 
+  count()
+
+brfss_data %>% 
+  count(locationabbr) %>% 
+  arrange(desc(n)) %>% 
+  select(locationabbr) %>% 
+  head(1)
+
 ```
 
-Using this dataset, do or answer the following:
-How many unique locations are included in the dataset? There are `r {count(n_distinct(BRFSS_data$locationdesc))}` unique locations included in this dataset. 
-Is every state represented? What state is observed the most?
+###Questions
+There are `r {count(distinct(brfss_data, locationdesc))}` unique locations included in this dataset. 
 
-There are `r {count(n_distinct(BRFSS_data$locationabbr))}` states included in this dataset. 
+There are `r {brfss_data %>% distinct(locationabbr) %>% count()}` states included in this dataset. Thus, every state is represented, including DC.
 
-In 2002, what is the median of the “Excellent” response value?
-Make a histogram of “Excellent” response values in the year 2002.
-Make a scatterplot showing the proportion of “Excellent” response values in New York County and Queens County (both in NY State) in each year from 2002 to 2010.
+`r {brfss_data %>% count(locationabbr) %>% arrange(desc(n)) %>% select(locationabbr) %>% head(1)}` is the state with the most observations. 
+
+In 2002, what is the median of the “Excellent” response value? 
+`r {brfss)data %>% filter(year == "2002", !is.na(excellent)) %>% summarize(median(excellent))}` was the median of the Excellent response value. 
+
+
+
+In this code chunk, I will make a histogram of “Excellent” response values in the year 2002 and make a scatterplot showing the proportion of “Excellent” response values in New York County and Queens County (both in NY State) in each year from 2002 to 2010.
+```{r plots}
+brfss_data %>% 
+  filter(year == "2002", !is.na(excellent)) %>% 
+  ggplot(aes(x = excellent)) + geom_histogram()
+
+brfss_data %>% 
+  filter(locationdesc == "NY - Queens County" | locationdesc == "NY - New York County") %>% 
+  ggplot(aes(x = year, y = excellent)) + geom_point()
+```
+
+
+
