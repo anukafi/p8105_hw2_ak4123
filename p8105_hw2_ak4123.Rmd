@@ -96,6 +96,7 @@ brfss_data = brfss_smart2010 %>%
   select(-class, -topic, -question, -sample_size, -confidence_limit_low:-geo_location) %>% 
   spread(key = response, value = data_value) %>% 
   janitor::clean_names()
+##  mutate(proportion_excellent_verygood = (excellent + very_good)/(excellent + very_good + good + fair + poor))
 
 ```
 
